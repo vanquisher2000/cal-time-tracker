@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:cal_time_tracker/main.dart';
 
@@ -44,7 +43,9 @@ class TaskPage extends StatelessWidget {
                   children: [
                     RoundButton(
                       label: "Stop",
-                      onPressed: appState.stopTimer,
+                      onPressed: () {
+                        appState.stopTimer(context);
+                      },
                     ),
                     const SizedBox(
                       width: 48,
@@ -139,7 +140,7 @@ class EventInfo extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.timer),
             title: Text(
-                " Event Stoped : ${appState.stopTime.hour.toFormatedString()}:${appState.stopTime.minute.toFormatedString()}:${appState.stopTime.second.toFormatedString()}"),
+                " Event Stopped : ${appState.stopTime.hour.toFormatedString()}:${appState.stopTime.minute.toFormatedString()}:${appState.stopTime.second.toFormatedString()}"),
           ),
           SizedBox(
             width: 300,

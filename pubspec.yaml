@@ -7,11 +7,14 @@ environment:
   sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
+  device_calendar: ^4.3.2
   firebase_auth: ^4.16.0
   firebase_core: ^2.24.2
   flutter:
     sdk: flutter
+  fluttertoast: ^8.2.4
   google_sign_in: ^6.2.1
+  iconly: ^1.0.1
   provider: "^5.0.0"
   shared_preferences: ^2.2.2
 
@@ -22,3 +25,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/time.png

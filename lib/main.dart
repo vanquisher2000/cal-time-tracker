@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'package:cal_time_tracker/controller/calendarController.dart';
+import 'package:cal_time_tracker/controller/userController.dart';
+import 'package:cal_time_tracker/firebase_options.dart';
+import 'package:cal_time_tracker/login_page.dart';
+import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cal_time_tracker/taskPage.dart';
-import "package:cal_time_tracker/loginPage.dart";
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 
 extension IntExtensions on int {
   String toFormatedString() {
@@ -20,31 +23,19 @@ extension DoubleExtensions on double {
   }
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MainApp());
 }
 
 class EventData {
-  final String name;
-  final DateTime startTime;
-  final DateTime endTime;
-  final String eventInfo;
-
   EventData({
     required this.name,
     required this.startTime,
     required this.endTime,
     this.eventInfo = "",
   });
-
-  Map<String, dynamic> toJson() {
-    return {
-      "name": name,
-      "startTime": startTime.toString(),
-      "endTime": endTime.toIso8601String(),
-      "eventInfo": eventInfo,
-    };
-  }
 
   factory EventData.fromJson(Map<String, dynamic> json) {
     return EventData(
@@ -53,6 +44,20 @@ class EventData {
       endTime: DateTime.parse(json["endTime"]),
       eventInfo: json["eventInfo"],
     );
+  }
+
+  final DateTime endTime;
+  final String eventInfo;
+  final String name;
+  final DateTime startTime;
+
+  Map<String, dynamic> toJson() {
+    return {
+      "name": name,
+      "startTime": startTime.toString(),
+      "endTime": endTime.toIso8601String(),
+      "eventInfo": eventInfo,
+    };
   }
 }
 
@@ -64,41 +69,40 @@ class MainApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Time Tracker',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
-        ),
-        home: 
-        //GoogleSignInScreen()
-        const MyHomePage()
-        ,
-      ),
+          title: 'Time Tracker',
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          ),
+          home: UserController.user == null
+              ? const LoginPage()
+              : const MyHomePage()),
+      //GoogleSignInScreen()
+      //const MyHomePage(),
     );
   }
 }
 
 class MyAppState extends ChangeNotifier {
-  //DateTime currentTime = DateTime.now();
-  DateTime startTime = DateTime(0);
-  Duration elapsedTime = Duration.zero;
-  var stopTime = DateTime(0);
-  late Timer timer;
-  bool isInitialized = false;
-  List<Widget> record = [];
-  List<EventData> events = [];
-  var currentEventName = "";
-  var currentEventInfo = "";
-  var lapsedMinutes = 0;
-  var lapsedSeconds = 0;
-  var lapsedHours = 0;
-  var textFiledController = TextEditingController();
-  var infoTextFeildController = TextEditingController();
-  late SharedPreferences sharedPreferences;
-
   MyAppState() {
     initPrefs();
   }
+
+  var currentEventInfo = "";
+  var currentEventName = "";
+  Duration elapsedTime = Duration.zero;
+  List<EventData> events = [];
+  var infoTextFeildController = TextEditingController();
+  bool isInitialized = false;
+  var lapsedHours = 0;
+  var lapsedMinutes = 0;
+  var lapsedSeconds = 0;
+  late SharedPreferences sharedPreferences;
+  DateTime startTime = DateTime(0);
+
+  var stopTime = DateTime(0);
+  var textFiledController = TextEditingController();
+  late Timer timer;
 
   void startTimer() {
     // setState(() {
@@ -117,10 +121,11 @@ class MyAppState extends ChangeNotifier {
     // });
   }
 
-  void stopTimer() {
+  void stopTimer(BuildContext context) {
     if (isInitialized) {
       timer.cancel();
       stopTime = DateTime.now();
+
       isInitialized = false;
       var result = EventData(
           name: currentEventName,
@@ -128,6 +133,13 @@ class MyAppState extends ChangeNotifier {
           endTime: stopTime,
           eventInfo: currentEventInfo);
       events.add(result);
+      CalendarController.addEvent(
+        currentEventName,
+        currentEventInfo,
+        startTime,
+        stopTime,
+        context: context,
+      );
       saveData();
       notifyListeners();
     }
@@ -139,7 +151,6 @@ class MyAppState extends ChangeNotifier {
     stopTime = DateTime(0);
     timer.cancel();
     isInitialized = false;
-    record = [];
     //events = [];
     currentEventName = "";
     lapsedMinutes = 0;
@@ -190,7 +201,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePage();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class Old_MyHomePageState extends State<MyHomePage> {
   var selectedIndex = 0;
 
   @override
@@ -217,7 +228,33 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: const Text("title"),
+        title: Row(
+          children: [
+            CircleAvatar(
+              foregroundImage:
+                  NetworkImage(UserController.user?.photoURL ?? ""),
+            ),
+            const SizedBox(
+              width: 8,
+            ),
+            Text(UserController.user?.displayName ?? ""),
+            const SizedBox(
+              width: 8,
+            ),
+            const Text("Tasks"),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: () async {
+                await UserController.signOutFromGoogle();
+                if (mounted) {
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (context) => const LoginPage()));
+                }
+              },
+              child: const Text("Logout"),
+            )
+          ],
+        ),
       ),
       body: Row(
         children: [
@@ -291,6 +328,117 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 } */
 
+class _MyHomePage extends State<MyHomePage> {
+  //late DeviceCalendarPlugin _deviceCalendarPlugin;
+  //List<Calendar> _calendars = [];
+  //Calendar? defaultCalendar;
+
+  _MyHomePage() {
+    //_deviceCalendarPlugin = DeviceCalendarPlugin();
+    CalendarController.init();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    //_retrieveCalendars();
+    setState(() {
+      CalendarController.retrieveCalendars();
+    });
+  }
+
+  /* void _retrieveCalendars() async {
+    //Retrieve user's calendars from mobile device
+    //Request permissions first if they haven't been granted
+    try {
+      var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
+      if (permissionsGranted.isSuccess && !permissionsGranted.data!) {
+        permissionsGranted = await _deviceCalendarPlugin.requestPermissions();
+        if (!permissionsGranted.isSuccess || !permissionsGranted.data!) {
+          return;
+        }
+      }
+
+      final calendarsResult = await _deviceCalendarPlugin.retrieveCalendars();
+      setState(() {
+        _calendars = (calendarsResult.data != null)
+            ? calendarsResult.data!.toList()
+            : [];
+        defaultCalendar =
+            _calendars.firstWhere((element) => element.isDefault ?? false);
+
+        //print(defaultCalender.)
+      });
+    } catch (e) {
+      print(e);
+    }
+  } */
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
+    return Scaffold(
+      appBar: AppBar(
+        // TRY THIS: Try changing the color here to a specific color (to
+        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+        // change color while the other colors stay the same.
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  foregroundImage:
+                      NetworkImage(UserController.user?.photoURL ?? ''),
+                ),
+                const SizedBox(
+                  width: 8,
+                ),
+                Text(UserController.user?.displayName ?? "no name found"),
+                const SizedBox(
+                  width: 8,
+                ),
+                Text("calendar: ${CalendarController.calendars.length}"),
+              ],
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: () async {
+                await UserController.signOutFromGoogle();
+                if (mounted) {
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (context) => const LoginPage()));
+                }
+              },
+              child: const Text("Logout"),
+            )
+          ],
+        ),
+      ),
+      body: Container(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        child: const Tasks(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          //appState.startTimer();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TaskPage()),
+          );
+        },
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ), //
+    );
+  }
+}
+
 class Tasks extends StatelessWidget {
   const Tasks({super.key});
 
@@ -329,40 +477,6 @@ class Tasks extends StatelessWidget {
           ]),
         ))
       ],
-    );
-  }
-}
-
-class _MyHomePage extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: const Text("title"),
-      ),
-      body: Container(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        child: const Tasks(),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          //appState.startTimer();
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TaskPage()),
-          );
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), //
     );
   }
 }

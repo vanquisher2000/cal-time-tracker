@@ -17,15 +17,24 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        return ios;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
@@ -43,41 +52,11 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyB2aeYtp0YqDpPEF0gJofUM21xVnTTNsw0',
-    appId: '1:12346867776:web:c924f381f9c9bcbd2ddfa5',
-    messagingSenderId: '12346867776',
-    projectId: 'cal-time-tracker',
-    authDomain: 'cal-time-tracker.firebaseapp.com',
-    storageBucket: 'cal-time-tracker.appspot.com',
-    measurementId: 'G-3HZK4JLVPM',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBSWoSUf6OiceqPv1JYQGG_UNTTTXMdhAg',
     appId: '1:12346867776:android:b5485d5be102791a2ddfa5',
     messagingSenderId: '12346867776',
     projectId: 'cal-time-tracker',
     storageBucket: 'cal-time-tracker.appspot.com',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAqW_Clq5Tm6StCTuA-LPBcewmXowTSrEQ',
-    appId: '1:12346867776:ios:01d83f862617017f2ddfa5',
-    messagingSenderId: '12346867776',
-    projectId: 'cal-time-tracker',
-    storageBucket: 'cal-time-tracker.appspot.com',
-    iosClientId: '12346867776-3dpu82pit9i0d3lnurhoq319pir7kier.apps.googleusercontent.com',
-    iosBundleId: 'com.example.calTimeTracker',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAqW_Clq5Tm6StCTuA-LPBcewmXowTSrEQ',
-    appId: '1:12346867776:ios:f7430f609dbdb5462ddfa5',
-    messagingSenderId: '12346867776',
-    projectId: 'cal-time-tracker',
-    storageBucket: 'cal-time-tracker.appspot.com',
-    iosClientId: '12346867776-ftrnq09a5itcbqfr75g77p2nju09nd0o.apps.googleusercontent.com',
-    iosBundleId: 'com.example.calTimeTracker.RunnerTests',
   );
 }
