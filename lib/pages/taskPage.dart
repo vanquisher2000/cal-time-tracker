@@ -1,10 +1,14 @@
+import 'package:cal_time_tracker/appState.dart';
+import 'package:cal_time_tracker/data/EventData.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:cal_time_tracker/main.dart';
 
 class TaskPage extends StatelessWidget {
-  const TaskPage({super.key});
+  TaskPage({super.key});
 
+  var canPop = false;
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -27,47 +31,88 @@ class TaskPage extends StatelessWidget {
       ),
     );
     return Scaffold(
-      body: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                card,
-                const SizedBox(
-                  height: 24,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    RoundButton(
-                      label: "Stop",
-                      onPressed: () {
-                        appState.stopTimer(context);
-                      },
-                    ),
-                    const SizedBox(
-                      width: 48,
-                    ),
-                    (!appState.isInitialized)
-                        ? RoundButton(
-                            label: !appState.isInitialized ? "Start" : "Reset",
-                            onPressed: appState.startTimer,
-                            textColor: Colors.green,
-                          )
-                        : RoundButton(
-                            label: "Reset",
-                            onPressed: appState.reset,
-                            textColor: Colors.redAccent,
-                          ),
-                  ],
-                )
-              ],
-            ),
-            //Records(record: appState.record)
-            const EventInfo()
-          ]),
+      body: PopScope(
+        canPop: canPop,
+        onPopInvoked: (didPop) {
+          if (didPop) return;
+          /* Navigator.of(context).pop();
+          if (!appState.isInitialized) {
+            //Navigator.of(context).pop();
+          } */
+          print("$didPop , truth is ${appState.canPop}");
+          if (didPop) {
+            print("trying to pop");
+            Navigator.of(context).pop();
+            Navigator.popUntil(context, ModalRoute.withName("/"));
+            print("popped");
+          } else {
+            if (appState.isInitialized) {
+              showDialog(
+                  context: context,
+                  builder: (context) => const timerIsOnDialog());
+            }
+          }
+        },
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: <Widget>[
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  card,
+                  const SizedBox(
+                    height: 24,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      (appState.currentEvent == null)
+                          ? RoundButton(
+                              label: "Stop",
+                              onPressed: () {
+                                appState.stopTimer(context);
+                              },
+                            )
+                          : RoundButton(
+                              label: "push",
+                              onPressed: () {
+                                appState.stopTimer(context);
+                                if (appState.currentEventName.isEmpty) {
+                                  showDialog(
+                                      context: context,
+                                      builder: (context) =>
+                                          const noNameDialog());
+                                } else {
+                                  appState.pushEvent(context);
+                                  appState.canPop = true;
+                                  canPop = true;
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                            ),
+                      const SizedBox(
+                        width: 48,
+                      ),
+                      (!appState.isInitialized)
+                          ? RoundButton(
+                              label: "Start",
+                              onPressed: appState.startTimer,
+                              textColor: Colors.green,
+                            )
+                          : RoundButton(
+                              label: "Reset",
+                              onPressed: appState.reset,
+                              textColor: Colors.redAccent,
+                            ),
+                    ],
+                  )
+                ],
+              ),
+              //Records(record: appState.record)
+              const EventInfo()
+            ]),
+      ),
     );
   }
 }
@@ -124,9 +169,12 @@ class EventInfo extends StatelessWidget {
                   surfaceTintColor: Colors.blueGrey,
                   child: AutoComplete(
                     events: appState.events,
-                    initialValue: appState.currentEventName.isNotEmpty
+                    initialValue: appState.currentEventName
+
+                    /* appState.currentEventName.isNotEmpty
                         ? appState.currentEventName
-                        : "event #${appState.events.length + 1}",
+                        : "event #${appState.events.length + 1}" */
+                    ,
                   ),
                 ),
               ),
@@ -143,14 +191,14 @@ class EventInfo extends StatelessWidget {
                 " Event Stopped : ${appState.stopTime.hour.toFormatedString()}:${appState.stopTime.minute.toFormatedString()}:${appState.stopTime.second.toFormatedString()}"),
           ),
           SizedBox(
-            width: 300,
+            //width: 300,
             height: 120,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Card(
                 surfaceTintColor: Colors.blueGrey,
-                child: ListView(children: [
-                  TextField(
+                child: SingleChildScrollView(
+                  child: TextField(
                     controller: appState.infoTextFeildController,
                     onChanged: (value) => appState.currentEventInfo = value,
                     maxLines: null,
@@ -159,7 +207,7 @@ class EventInfo extends StatelessWidget {
                         contentPadding: EdgeInsets.symmetric(horizontal: 24),
                         border: InputBorder.none),
                   ),
-                ]),
+                ),
               ),
             ),
           )
@@ -215,6 +263,51 @@ class AutoComplete extends StatelessWidget {
         appState.textFiledController.text = event.name;
       },
       initialValue: TextEditingValue(text: initialValue),
+    );
+  }
+}
+
+class noNameDialog extends StatelessWidget {
+  const noNameDialog({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      content: const Text("Please enter event name"),
+      actions: [
+        TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text("OK"))
+      ],
+    );
+  }
+}
+
+class timerIsOnDialog extends StatelessWidget {
+  const timerIsOnDialog({super.key});
+  @override
+  Widget build(BuildContext context) {
+    var appStart = context.watch<MyAppState>();
+    return AlertDialog(
+      content: const Text(
+          "if you leave now the timer will be stopped and the event will be lost"),
+      actions: [
+        TextButton(
+            onPressed: () {
+              appStart.stopTimer(context);
+              appStart.reset();
+              appStart.canPop = true;
+              //Navigator.of(context).pop();
+              Navigator.popUntil(context, ModalRoute.withName("/"));
+            },
+            child: const Text("cancel Timer")),
+        TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text("continue"))
+      ],
     );
   }
 }

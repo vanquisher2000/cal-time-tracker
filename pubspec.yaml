@@ -7,11 +7,14 @@ environment:
   sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
+  awesome_notifications: ^0.9.2
   device_calendar: ^4.3.2
+  dynamic_color: ^1.7.0
   firebase_auth: ^4.16.0
   firebase_core: ^2.24.2
   flutter:
     sdk: flutter
+  flutter_local_notifications: ^16.3.2
   fluttertoast: ^8.2.4
   google_sign_in: ^6.2.1
   iconly: ^1.0.1

@@ -64,7 +64,6 @@ class CalendarController {
       defaultCalendar!.id,
       title: name,
       description: description,
-      //start: TZDateTime.local(2024, 2, 27, 18, 0),
       start: localStart,
       end: localEnd,
     );
@@ -76,12 +75,13 @@ class CalendarController {
     if (result.isSuccess) {
       //resultBool = Future.value(true);
       print("Event created!!!!!!!!");
-      showResultSnackBar(context, "event: $name created");
+      showResultSnackBar(context, "event: $name created", color: Colors.green);
       return;
     }
 
     if (!result.hasErrors) {
       //resultBool = Future.value(false);
+      showResultSnackBar(context, "event: $name failed to create!!!");
       return;
     }
 
@@ -89,9 +89,13 @@ class CalendarController {
   }
 
   static Future<void> showResultSnackBar(
-      BuildContext context, String message) async {
+    BuildContext context,
+    String message, {
+    Color color = Colors.red,
+  }) async {
     final snackBar = SnackBar(
       content: Text(message),
+      backgroundColor: color,
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
     /* var result = await resultBool;
