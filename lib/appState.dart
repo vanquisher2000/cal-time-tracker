@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:cal_time_tracker/controller/calendarController.dart';
-import 'package:cal_time_tracker/controller/customNotificationController.dart';
-import 'package:cal_time_tracker/controller/notificationController.dart';
-import 'package:cal_time_tracker/data/EventData.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:cal_time_tracker/controller/calendarController.dart';
+import 'package:cal_time_tracker/controller/notificationController.dart';
+import 'package:cal_time_tracker/data/EventData.dart';
 
 extension IntExtensions on int {
   String toFormatedString() {
@@ -40,6 +39,10 @@ class MyAppState extends ChangeNotifier {
   EventData? currentEvent;
   var canPop = true;
 
+  var heroMode = false;
+
+  EventData? currentParentEvent;
+
   var stopTime = DateTime(0);
   var textFiledController = TextEditingController();
   late Timer timer;
@@ -57,8 +60,10 @@ class MyAppState extends ChangeNotifier {
         lapsedMinutes = elapsedTime.inSeconds ~/ 60;
         lapsedSeconds = elapsedTime.inSeconds % 60;
         lapsedHours = elapsedTime.inMinutes ~/ 60;
-        LocalNotificationService.showNotificationAndroid(currentEventName,
-            "elapsed Time: ${getFormatedDuration(elapsedTime.inSeconds)}");
+        LocalNotificationService.showNotificationAndroid(
+          "$currentEventName : ${getFormatedDuration(elapsedTime.inSeconds)}",
+          "elapsed Time: ${getFormatedDuration(elapsedTime.inSeconds)}",
+        );
 
         // showNotification();
         notifyListeners();
@@ -98,7 +103,7 @@ class MyAppState extends ChangeNotifier {
     if (currentEvent == null) return;
     addEvent(currentEvent!);
     CalendarController.addEvent(
-      currentEventName,
+      "${currentParentEvent?.name} : $currentEventName",
       currentEventInfo,
       startTime,
       stopTime,
@@ -113,6 +118,7 @@ class MyAppState extends ChangeNotifier {
   void reset() {
     //if (startTime != DateTime(0)) {
     currentEvent = null;
+    currentParentEvent = null;
     canPop = true;
     startTime = DateTime(0);
     elapsedTime = Duration.zero;
@@ -134,7 +140,7 @@ class MyAppState extends ChangeNotifier {
 
   void addEvent(EventData _event) {
     print("adding event : ${_event.name}");
-    EventData? event = events.firstWhere(
+    EventData? event = currentParentEvent?.children.firstWhere(
       (element) => element.name == _event.name,
       orElse: () => EventData(
         name: "",
@@ -150,19 +156,25 @@ class MyAppState extends ChangeNotifier {
       }
     } */
 
-    if (event.duration != 0) {
+    if (event?.duration != 0) {
       //event.startTime = _event.startTime;
       //event.endTime = _event.endTime;
-      event.eventInfo = _event.eventInfo;
-      event.duration = event.duration + _event.duration;
+      event?.eventInfo = _event.eventInfo;
+      event?.duration = event.duration + _event.duration;
       print(
-          "updating event : ${_event.name} , new duration : ${event.duration}");
+          "updating event : ${_event.name} , new duration : ${event?.duration}");
       //saveData();
     } else {
       print("adding new event : ${_event.name}");
-      events.add(_event);
+      currentParentEvent?.children.add(_event);
       //saveData();
     }
+    debugPrint("old total duration ${currentParentEvent?.duration}");
+    if (currentParentEvent != null) {
+      currentParentEvent!.duration =
+          currentParentEvent!.duration + _event.duration;
+    }
+    debugPrint("new total duration ${currentParentEvent?.duration}");
   }
 
   String getFormatedDuration(int seconds) {
@@ -170,12 +182,13 @@ class MyAppState extends ChangeNotifier {
     var remainingSeconds = seconds % 60;
     var hours = minutes ~/ 60;
 
-    return "${hours.toFormatedString()}:${minutes.toFormatedString()}:${remainingSeconds.toFormatedString()}";
+    return "${hours.toFormatedString()}:${(minutes - hours * 60).toFormatedString()}:${remainingSeconds.toFormatedString()}";
   }
 
-  void showNotification() {
+  /* void showNotification() {
     NotificationController.showNotification(
-        title: currentEventName,
+        title:
+            "$currentEventName : ${getFormatedDuration(elapsedTime.inSeconds)}",
         body: "running Timer: ${getFormatedDuration(elapsedTime.inSeconds)}",
         payload: {
           "notificationId": "1",
@@ -192,7 +205,7 @@ class MyAppState extends ChangeNotifier {
               label: "Snooze",
               actionType: ActionType.SilentAction),
         ]);
-  }
+  } */
 
   Future<void> initPrefs() async {
     try {

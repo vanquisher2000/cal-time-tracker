@@ -1,6 +1,6 @@
 
 buildscript {
-    ext.kotlin_version = "1.7.10"
+    ext.kotlin_version = '1.8.22'
     repositories {
         google()
         mavenCentral()
@@ -8,7 +8,7 @@ buildscript {
 
     dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    classpath 'com.android.tools.build:gradle:7.3.0'
+    classpath 'com.android.tools.build:gradle:8.1.0'
     classpath 'com.google.gms:google-services:4.3.15'
     }
 
@@ -26,6 +26,18 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+
+    subprojects {
+        afterEvaluate { project ->
+            if (project.hasProperty('android')) {
+                project.android {
+                    if (namespace == null) {
+                        namespace project.group
+                    }
+                }
+            }
+        }
     }
 }
 

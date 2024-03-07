@@ -29,9 +29,10 @@ if (flutterVersionName == null) {
 android {
     namespace "com.example.cal_time_tracker"
     compileSdk flutter.compileSdkVersion
-    ndkVersion flutter.ndkVersion
+    ndkVersion  "25.1.8937393"
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -60,6 +61,13 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.debug
+            minifyEnabled true
+            //useProguard true. // This is depricated in latest gradle. Make sure to remove it.
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            ndk {
+                abiFilters 'armeabi-v7a','arm64-v8a','x86_64'
+            } 
         }
     }
 }
@@ -73,6 +81,9 @@ dependencies {
     //implementation platform('com.google.firebase:firebase-bom:32..7.2')
     //implementation 'com.google.firebase:firebase-analytics'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.google.android.material:material:<version>'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation "androidx.window:window:1.0.0-rc01"
+    implementation "androidx.window:window-java:1.0.0-rc01"
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 }
 

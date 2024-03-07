@@ -1,14 +1,14 @@
+import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:cal_time_tracker/appState.dart';
 import 'package:cal_time_tracker/data/EventData.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:cal_time_tracker/main.dart';
 
 class TaskPage extends StatelessWidget {
   TaskPage({super.key});
 
-  var canPop = false;
+  var canPop = true;
+  var fontSize = 40.0;
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -20,16 +20,36 @@ class TaskPage extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: SizedBox(
           width: 200,
-          child: Text(
-            '${appState.lapsedHours.toFormatedString()}:${appState.lapsedMinutes.toFormatedString()}:${appState.lapsedSeconds.toFormatedString()}',
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedText(
+                value: appState.lapsedHours,
+                fontSize: fontSize,
+              ),
+              Text(":", style: TextStyle(fontSize: fontSize)),
+              AnimatedText(
+                value: (appState.lapsedMinutes - appState.lapsedHours * 60),
+                fontSize: fontSize,
+              ),
+              Text(":", style: TextStyle(fontSize: fontSize)),
+              AnimatedText(
+                value: appState.lapsedSeconds,
+                fontSize: fontSize,
+              ),
+            ],
+          )
+          /* Text(
+            '${appState.lapsedHours.toFormatedString()}:${(appState.lapsedMinutes - appState.lapsedHours * 60).toFormatedString()}:${appState.lapsedSeconds.toFormatedString()}',
             textAlign: TextAlign.center,
             style: theme.textTheme.displayMedium!.copyWith(
                 //color: theme.colorScheme.primaryContainer,
-                ),
-          ),
+                ) */
+          ,
         ),
       ),
     );
+
     return Scaffold(
       body: PopScope(
         canPop: canPop,
@@ -39,7 +59,7 @@ class TaskPage extends StatelessWidget {
           if (!appState.isInitialized) {
             //Navigator.of(context).pop();
           } */
-          print("$didPop , truth is ${appState.canPop}");
+          print("$didPop , truth is ${appState.canPop} , $canPop");
           if (didPop) {
             print("trying to pop");
             Navigator.of(context).pop();
@@ -59,6 +79,9 @@ class TaskPage extends StatelessWidget {
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  const SizedBox(
+                    height: 24,
+                  ),
                   card,
                   const SizedBox(
                     height: 24,
@@ -97,7 +120,10 @@ class TaskPage extends StatelessWidget {
                       (!appState.isInitialized)
                           ? RoundButton(
                               label: "Start",
-                              onPressed: appState.startTimer,
+                              onPressed: () {
+                                appState.startTimer();
+                                canPop = false;
+                              },
                               textColor: Colors.green,
                             )
                           : RoundButton(
@@ -155,63 +181,68 @@ class EventInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    return Card(
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text("Event Name"),
-              ),
-              Expanded(
+    var theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Card(
+        shadowColor: theme.colorScheme.onSurface,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text("Event Name"),
+                ),
+                Expanded(
+                  child: Card(
+                    surfaceTintColor: Colors.blueGrey,
+                    child: AutoComplete(
+                      events: appState.currentParentEvent?.children ?? [],
+                      initialValue: appState.currentEventName
+
+                      /* appState.currentEventName.isNotEmpty
+                          ? appState.currentEventName
+                          : "event #${appState.events.length + 1}" */
+                      ,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            ListTile(
+              leading: const Icon(Icons.timer),
+              title: Text(
+                  " Event started : ${appState.startTime.hour.toFormatedString()}:${appState.startTime.minute.toFormatedString()}:${appState.startTime.second.toFormatedString()}"),
+            ),
+            ListTile(
+              leading: const Icon(Icons.timer),
+              title: Text(
+                  " Event Stopped : ${appState.stopTime.hour.toFormatedString()}:${appState.stopTime.minute.toFormatedString()}:${appState.stopTime.second.toFormatedString()}"),
+            ),
+            SizedBox(
+              //width: 300,
+              height: 120,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
                 child: Card(
                   surfaceTintColor: Colors.blueGrey,
-                  child: AutoComplete(
-                    events: appState.events,
-                    initialValue: appState.currentEventName
-
-                    /* appState.currentEventName.isNotEmpty
-                        ? appState.currentEventName
-                        : "event #${appState.events.length + 1}" */
-                    ,
+                  child: SingleChildScrollView(
+                    child: TextField(
+                      controller: appState.infoTextFeildController,
+                      onChanged: (value) => appState.currentEventInfo = value,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                          hintText: "Insert event Info...",
+                          contentPadding: EdgeInsets.symmetric(horizontal: 24),
+                          border: InputBorder.none),
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
-          ListTile(
-            leading: const Icon(Icons.timer),
-            title: Text(
-                " Event started : ${appState.startTime.hour.toFormatedString()}:${appState.startTime.minute.toFormatedString()}:${appState.startTime.second.toFormatedString()}"),
-          ),
-          ListTile(
-            leading: const Icon(Icons.timer),
-            title: Text(
-                " Event Stopped : ${appState.stopTime.hour.toFormatedString()}:${appState.stopTime.minute.toFormatedString()}:${appState.stopTime.second.toFormatedString()}"),
-          ),
-          SizedBox(
-            //width: 300,
-            height: 120,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Card(
-                surfaceTintColor: Colors.blueGrey,
-                child: SingleChildScrollView(
-                  child: TextField(
-                    controller: appState.infoTextFeildController,
-                    onChanged: (value) => appState.currentEventInfo = value,
-                    maxLines: null,
-                    decoration: const InputDecoration(
-                        hintText: "Insert event Info...",
-                        contentPadding: EdgeInsets.symmetric(horizontal: 24),
-                        border: InputBorder.none),
-                  ),
-                ),
-              ),
-            ),
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -228,6 +259,19 @@ class AutoComplete extends StatelessWidget {
   static String displayEventName(EventData event) => event.name;
   final String initialValue;
 
+  Widget _flightShuttleBuilder(
+    BuildContext flightContext,
+    Animation<double> animation,
+    HeroFlightDirection flightDirection,
+    BuildContext fromHeroContext,
+    BuildContext toHeroContext,
+  ) {
+    return DefaultTextStyle(
+      style: DefaultTextStyle.of(toHeroContext).style,
+      child: toHeroContext.widget,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -236,15 +280,19 @@ class AutoComplete extends StatelessWidget {
           TextEditingController fieldTextEditingController,
           FocusNode fieldFocusNode,
           VoidCallback onFieldSubmitted) {
-        return TextField(
-          onChanged: (value) => appState.currentEventName = value,
-          controller: fieldTextEditingController,
-          textAlign: TextAlign.center,
-          focusNode: fieldFocusNode,
-          decoration: const InputDecoration(
-            hintText: "Insert event name...",
-            contentPadding: EdgeInsets.symmetric(horizontal: 24),
-            border: InputBorder.none,
+        return Hero(
+          tag: appState.currentEventName,
+          flightShuttleBuilder: _flightShuttleBuilder,
+          child: TextField(
+            onChanged: (value) => appState.currentEventName = value,
+            controller: fieldTextEditingController,
+            textAlign: TextAlign.center,
+            focusNode: fieldFocusNode,
+            decoration: const InputDecoration(
+              hintText: "Insert event name...",
+              contentPadding: EdgeInsets.symmetric(horizontal: 24),
+              border: InputBorder.none,
+            ),
           ),
         );
       },
@@ -308,6 +356,20 @@ class timerIsOnDialog extends StatelessWidget {
             },
             child: const Text("continue"))
       ],
+    );
+  }
+}
+
+class AnimatedText extends StatelessWidget {
+  const AnimatedText({super.key, required this.value, required this.fontSize});
+  final int value;
+  final double fontSize;
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedFlipCounter(
+      wholeDigits: 2,
+      value: value,
+      textStyle: TextStyle(fontSize: fontSize),
     );
   }
 }
