@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class LocalNotificationService {
@@ -8,7 +7,7 @@ class LocalNotificationService {
   static Future<void> init() async {
     // Initialize native android notification
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('mipmap/launcher_icon');
 
     // Initialize native Ios Notifications
     const DarwinInitializationSettings initializationSettingsIOS =
@@ -26,22 +25,49 @@ class LocalNotificationService {
   }
 
   static void showNotificationAndroid(String title, String value) async {
-    const AndroidNotificationDetails androidNotificationDetails =
-        AndroidNotificationDetails('timer_channel', 'Timer',
-            channelDescription: 'Channel Description',
-            importance: Importance.min,
-            priority: Priority.min,
-            showProgress: true,
-            showWhen: false,
-            sound: null,
-            silent: true,
-            playSound: false,
-            enableVibration: false,
-            color: Colors.green,
-            ticker: 'ticker');
+    /* AndroidNotificationDetails and = AndroidNotificationDetails(
+      'sample_vehicle',
+      'Vehicle Parking Time Remaining',
+      channelDescription: 'Notify the user that vehicle\'s time of booking...',
+      importance: Importance.max,
+      priority: Priority.max,
+      channelShowBadge: false,
+      ticker: 'sample_vehicle',
+      color: Colors.blue,
+      onlyAlertOnce: true,
+      when: whenTimer.millisecondsSinceEpoch,
+      timeoutAfter: whenTimer.difference(DateTime.now()).inMilliseconds,
+      usesChronometer: true,
+      chronometerCountDown: true,
+      visibility: NotificationVisibility.public,
+      ongoing: true,
+    ); */
+    AndroidNotificationDetails androidNotificationDetails =
+        const AndroidNotificationDetails(
+      'timer_channel',
+      'Timer',
+      channelDescription: 'Channel Description',
+      //styleInformation: BigTextStyleInformation(title),
+      importance: Importance.max,
+      priority: Priority.max,
+      showProgress: true,
+      onlyAlertOnce: true,
+      showWhen: true,
+      //sound: null,
+      silent: false,
+      //playSound: false,
+      //enableVibration: false,
+      //color: Colors.green,
+      ticker: 'ticker',
+      ongoing: true,
+      visibility: NotificationVisibility.public,
+      usesChronometer: true,
+      //ongoing: true,
+      //chronometerCountDown: true,
+    );
 
     int notification_id = -1;
-    const NotificationDetails notificationDetails =
+    NotificationDetails notificationDetails =
         NotificationDetails(android: androidNotificationDetails);
 
     await flutterLocalNotificationsPlugin.show(

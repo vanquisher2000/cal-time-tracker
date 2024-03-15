@@ -1,4 +1,4 @@
-import 'package:cal_time_tracker/main.dart';
+import 'package:cal_time_tracker/pages/home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cal_time_tracker/controller/userController.dart';
