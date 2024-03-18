@@ -78,31 +78,30 @@ class ExpPanelList extends StatelessWidget {
                 },
               );
             },
-            body: Card(
-              child: Column(
-                children: [
-                  for (var subEvent in event.children)
-                    ListTile(
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(subEvent.name),
-                          Text(appState.getFormatedDuration(subEvent.duration)),
-                        ],
-                      ),
-                      onTap: () {
-                        appState.reset();
-                        appState.currentEventName = subEvent.name;
-                        appState.textFiledController.text = subEvent.name;
-                        appState.currentParentEvent = event;
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => TaskPage()),
-                        );
-                      },
+            body: Column(
+              children: [
+                for (var subEvent in event.children)
+                  ListTile(
+                    style: ListTileStyle.list,
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(subEvent.name),
+                        Text(appState.getFormattedDuration(subEvent.duration)),
+                      ],
                     ),
-                ],
-              ),
+                    onTap: () {
+                      appState.reset();
+                      appState.currentEventName = subEvent.name;
+                      appState.textFiledController.text = subEvent.name;
+                      appState.currentParentEvent = event;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => TaskPage()),
+                      );
+                    },
+                  ),
+              ],
             ),
             isExpanded: event.isExpanded,
           );

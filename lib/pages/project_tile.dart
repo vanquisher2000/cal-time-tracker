@@ -90,7 +90,7 @@ class _ExpTile extends State<ExpTile> {
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: Text(
-            appState.getFormatedDuration(event.duration),
+            appState.getFormattedDuration(event.duration),
             style: TextStyle(
               color: Colors.black.withOpacity(0.64),
               fontStyle: FontStyle.italic,
@@ -164,37 +164,38 @@ class _ExpTile extends State<ExpTile> {
           for (var subEvent in event.children)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: Card(
-                color: theme.colorScheme.primaryContainer,
-                child: ListTile(
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      HeroMode(
-                        enabled: appState.heroMode,
-                        child: Hero(
-                            tag: subEvent.name,
-                            flightShuttleBuilder: _flightShuttleBuilder,
-                            transitionOnUserGestures: true,
-                            child: Text(
-                              subEvent.name,
-                            )),
-                      ),
-                      Text(appState.getFormatedDuration(subEvent.duration)),
-                    ],
-                  ),
-                  onTap: () {
-                    appState.heroMode = false;
-                    appState.reset();
-                    appState.currentEventName = subEvent.name;
-                    appState.textFiledController.text = subEvent.name;
-                    appState.currentParentEvent = event;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => TaskPage()),
-                    );
-                  },
+              child: ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    HeroMode(
+                      enabled: appState.heroMode,
+                      child: Hero(
+                          tag: event.name + subEvent.name,
+                          flightShuttleBuilder: _flightShuttleBuilder,
+                          transitionOnUserGestures: true,
+                          child: Text(
+                            subEvent.name,
+                            style: const TextStyle(color: Colors.black),
+                          )),
+                    ),
+                    Text(
+                      appState.getFormattedDuration(subEvent.duration),
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  ],
                 ),
+                onTap: () {
+                  appState.heroMode = false;
+                  appState.reset();
+                  appState.currentEventName = subEvent.name;
+                  appState.textFiledController.text = subEvent.name;
+                  appState.currentParentEvent = event;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => TaskPage()),
+                  );
+                },
               ),
             ),
         ]);

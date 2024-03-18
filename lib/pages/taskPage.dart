@@ -15,11 +15,11 @@ class TaskPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    var theme = Theme.of(context);
+    //var theme = Theme.of(context);
 
     return Scaffold(
       body: PopScope(
-        canPop: canPop,
+        canPop: appState.canPop,
         onPopInvoked: (didPop) {
           if (didPop) {
             appState.heroMode = true;
@@ -45,19 +45,37 @@ class TaskPage extends StatelessWidget {
           }
         },
         child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
               const Spacer(),
-              const Stack(
+              Center(
+                  child: Column(
                 children: [
-                  Center(child: TimerCard()),
-                  CounterAnimation(),
+                  const TimerCard(),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Text(appState.getStartTimeFormatted()),
+                        ),
+                        const Icon(Icons.arrow_right),
+                        Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Text(appState.getEndTimeFormatted()),
+                        ),
+                      ],
+                    ),
+                  )
                 ],
-              ),
+              )),
               const SizedBox(
-                height: 100,
+                height: 32,
               ),
-              Row(
+              const EventInfo(),
+              /*  Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -102,9 +120,18 @@ class TaskPage extends StatelessWidget {
                           textColor: Colors.redAccent,
                         ),
                 ],
-              ),
+              ), */
+
               const Spacer(),
-              const EventInfo()
+              Stack(
+                children: [
+                  TaskButton(canPop: canPop),
+                  const CounterAnimation(),
+                ],
+              ),
+              const SizedBox(
+                height: 128,
+              ),
             ]),
       ),
     );

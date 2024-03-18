@@ -153,6 +153,9 @@ class _MyHomePage extends State<MyHomePage> {
                       itemCount: appState.getEvents(searchValue).length,
                       itemBuilder: (context, index) {
                         return Card(
+                          //surfaceTintColor: Colors.transparent,
+                          //shadowColor: Colors.transparent,
+
                           elevation: 3,
                           margin: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 6),

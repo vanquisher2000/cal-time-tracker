@@ -48,6 +48,7 @@ class MainApp extends StatelessWidget {
           theme: ThemeData(
             colorScheme: lightColorScheme ?? _defaultLightColorScheme,
             useMaterial3: true,
+            splashColor: Colors.transparent,
           ),
           darkTheme: ThemeData(
             colorScheme: darkColorScheme ?? _defaultDarkColorScheme,

@@ -66,6 +66,12 @@ class _CounterAnimation extends State<CounterAnimation> {
   }
 
   @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     appState = context.watch<MyAppState>();
     //debugPrint("animation widget built");
@@ -130,27 +136,28 @@ class AnimationPainter extends CustomPainter {
     //TODO: make an equation to solve the hidden variable : read about flutter canvas
     const secStroke = 3.0;
     const minStroke = secStroke * 2;
-    const hourStroke = secStroke * 4;
-    final center = Offset(size.width / 2, size.height / 2 + 40);
+    const hourStroke = secStroke * 3;
+    final center = Offset(size.width / 2, size.height / 2 + 90);
 
-    final diameter = size.width * 0.64;
+    final diameter = size.width * 0.4;
     final d_2 = diameter + secStroke * 3;
-    final d_3 = d_2 + minStroke * 3;
+    final d_3 = d_2 + minStroke * 2;
 
-    drawTimeTrack(
+    /* drawTimeTrack(
       canvas,
       center,
       hour,
       Colors.red.shade300,
       stroke: hourStroke,
       diameter: d_3,
-    );
+    ); */
 
     drawTimeTrack(
       canvas,
       center,
       minute,
-      Colors.blue.shade300,
+      appState.minutesColor,
+      //Colors.blue.shade300,
       diameter: d_2,
       stroke: minStroke,
       //circleColor: Colors.greenAccent,
@@ -160,7 +167,8 @@ class AnimationPainter extends CustomPainter {
       canvas,
       center,
       angle,
-      Colors.purple.shade200,
+      appState.secondsColor,
+      // Colors.purple.shade200,
       stroke: secStroke,
       diameter: diameter,
       //circleColor: Colors.black,

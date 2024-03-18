@@ -1,4 +1,5 @@
 import 'package:cal_time_tracker/appState.dart';
+import 'package:cal_time_tracker/controller/notificationController.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -34,6 +35,8 @@ class timerIsOnDialog extends StatelessWidget {
               appStart.reset();
               appStart.canPop = true;
               //Navigator.of(context).pop();
+              LocalNotificationService.flutterLocalNotificationsPlugin
+                  .cancelAll();
               Navigator.popUntil(context, ModalRoute.withName("/"));
             },
             child: const Text("cancel Timer")),

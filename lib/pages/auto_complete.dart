@@ -36,7 +36,8 @@ class AutoComplete extends StatelessWidget {
           FocusNode fieldFocusNode,
           VoidCallback onFieldSubmitted) {
         return Hero(
-          tag: appState.currentEventName,
+          tag: (appState.currentParentEvent?.name ?? "") +
+              appState.currentEventName,
           flightShuttleBuilder: _flightShuttleBuilder,
           child: TextField(
             onChanged: (value) => appState.currentEventName = value,

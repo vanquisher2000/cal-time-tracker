@@ -34,7 +34,7 @@ class EventInfo extends StatelessWidget {
               surfaceTintColor: Colors.blueGrey,
               child: SingleChildScrollView(
                 child: TextField(
-                  controller: appState.infoTextFeildController,
+                  controller: appState.infoTextFieldController,
                   onChanged: (value) => appState.currentEventInfo = value,
                   maxLines: null,
                   decoration: const InputDecoration(
@@ -45,7 +45,8 @@ class EventInfo extends StatelessWidget {
               ),
             ),
           ),
-          Card(
+          const SizedBox(height: 48)
+          /* Card(
             child: Column(
               children: [
                 ListTile(
@@ -57,8 +58,7 @@ class EventInfo extends StatelessWidget {
                       const SizedBox(
                         width: 16,
                       ),
-                      Text(
-                          "${appState.startTime.hour.toFormatedString()}:${appState.startTime.minute.toFormatedString()}:${appState.startTime.second.toFormatedString()}"),
+                      Text(appState.getStartTimeFormatted()),
                     ],
                   ),
                 ),
@@ -71,14 +71,13 @@ class EventInfo extends StatelessWidget {
                       const SizedBox(
                         width: 19,
                       ),
-                      Text(
-                          "${appState.stopTime.hour.toFormatedString()}:${appState.stopTime.minute.toFormatedString()}:${appState.stopTime.second.toFormatedString()}"),
+                      Text(appState.getEndTimeFormatted()),
                     ],
                   ),
                 ),
               ],
             ),
-          )
+          ) */
         ],
       ),
     );

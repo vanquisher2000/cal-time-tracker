@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 class TimerCard extends StatelessWidget {
   const TimerCard({super.key});
 
-  final fontSize = 32.0;
+  final fontSize = 64.0;
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +15,7 @@ class TimerCard extends StatelessWidget {
     //var cardColor = theme.colorScheme.primaryContainer;
     return Center(
       child: SizedBox(
-        width: 200,
+        //width: 200,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

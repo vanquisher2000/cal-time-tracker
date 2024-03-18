@@ -10,7 +10,7 @@ import 'package:cal_time_tracker/controller/notificationController.dart';
 import 'package:cal_time_tracker/data/EventData.dart';
 
 extension IntExtensions on int {
-  String toFormatedString() {
+  String toFormattedString() {
     return toString().padLeft(2, "0");
   }
 }
@@ -31,7 +31,7 @@ class MyAppState extends ChangeNotifier {
   var currentEventName = "";
   Duration elapsedTime = Duration.zero;
   List<EventData> events = [];
-  var infoTextFeildController = TextEditingController();
+  var infoTextFieldController = TextEditingController();
   bool isInitialized = false;
   var lapsedHours = 0;
   var lapsedMinutes = 0.0;
@@ -126,6 +126,7 @@ class MyAppState extends ChangeNotifier {
     saveData();
     canPop = true;
     LocalNotificationService.flutterLocalNotificationsPlugin.cancelAll();
+    reset();
     notifyListeners();
   }
 
@@ -147,7 +148,7 @@ class MyAppState extends ChangeNotifier {
     currentEventInfo = "";
     currentEventName = "";
     textFiledController.clear();
-    infoTextFeildController.clear();
+    infoTextFieldController.clear();
     notifyListeners();
     //}
   }
@@ -191,12 +192,12 @@ class MyAppState extends ChangeNotifier {
     debugPrint("new total duration ${currentParentEvent?.duration}");
   }
 
-  String getFormatedDuration(int seconds) {
+  String getFormattedDuration(int seconds) {
     var minutes = seconds ~/ 60;
     var remainingSeconds = seconds % 60;
     var hours = minutes ~/ 60;
 
-    return "${hours.toFormatedString()}:${(minutes - hours * 60).toFormatedString()}:${remainingSeconds.toFormatedString()}";
+    return "${hours.toFormattedString()}:${(minutes - hours * 60).toFormattedString()}:${remainingSeconds.toFormattedString()}";
   }
 
   /* void showNotification() {
@@ -312,5 +313,15 @@ class MyAppState extends ChangeNotifier {
     while (hourColor == secondsColor || hourColor == minutesColor) {
       hourColor = getRandomColor();
     }
+  }
+
+  String getStartTimeFormatted() {
+    //if (startTime == DateTime(0)) return "";
+    return "${startTime.hour.toFormattedString()}:${startTime.minute.toFormattedString()}:${startTime.second.toFormattedString()}";
+  }
+
+  String getEndTimeFormatted() {
+    //if (stopTime == DateTime(0)) return "";
+    return "${stopTime.hour.toFormattedString()}:${stopTime.minute.toFormattedString()}:${stopTime.second.toFormattedString()}";
   }
 }
