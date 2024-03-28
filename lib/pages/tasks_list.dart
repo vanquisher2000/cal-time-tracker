@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:cal_time_tracker/appState.dart';
-import 'package:cal_time_tracker/data/EventData.dart';
+import 'package:cal_time_tracker/data/event_data.dart';
 import 'package:cal_time_tracker/pages/project_tile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

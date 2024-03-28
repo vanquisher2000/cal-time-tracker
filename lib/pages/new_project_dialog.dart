@@ -1,12 +1,15 @@
 import 'package:cal_time_tracker/appState.dart';
-import 'package:cal_time_tracker/data/EventData.dart';
+import 'package:cal_time_tracker/data/Task.dart';
+import 'package:cal_time_tracker/data/event_data.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class NewCategoryDialog extends StatelessWidget {
-  NewCategoryDialog({super.key});
+  NewCategoryDialog({super.key, this.isParent = true, this.isTask = false});
 
   var eventName = "";
+  final bool isParent;
+  final bool isTask;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +51,15 @@ class NewCategoryDialog extends StatelessWidget {
                     onPressed: () {
                       if (eventName.isNotEmpty) {
                         var event = EventData(name: eventName, duration: 0);
-                        appState.events.add(event);
+                        if (isParent) {
+                          appState.events.add(event);
+                        } else if (!isParent && !isTask) {
+                          appState.currentParentEvent?.children.add(event);
+                        } else {
+                          //appState.subTasks.add(eventName);
+                          //appState.subTasks[eventName] = [];
+                          appState.tasks.add(Task(name: eventName));
+                        }
                         appState.notifyListeners();
                         Navigator.pop(context);
                       }

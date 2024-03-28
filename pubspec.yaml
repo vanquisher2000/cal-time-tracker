@@ -17,6 +17,7 @@ dependencies:
   flutter_launcher_icons: ^0.13.1
   flutter_local_notifications: ^16.3.2
   google_sign_in: ^6.2.1
+  #home_widget: ^0.3.0
   iconly: ^1.0.1
   provider: ^6.1.2
   shared_preferences: ^2.2.2

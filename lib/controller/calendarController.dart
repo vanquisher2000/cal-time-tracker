@@ -1,3 +1,4 @@
+import 'package:cal_time_tracker/pages/new_task_page.dart';
 import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/material.dart';
 
@@ -93,11 +94,39 @@ class CalendarController {
     String message, {
     Color color = Colors.red,
   }) async {
+    var animatedSnackBar = SnackBar(
+      backgroundColor: color, // Set background color to transparent
+      elevation: 0, // Remove shadow
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0), // Set border radius
+      ),
+      content: AnimatedContainer(
+        duration: Duration(milliseconds: 500),
+        padding: const EdgeInsets.symmetric(
+          vertical: 8.0,
+          horizontal: 12.0,
+        ),
+        decoration: ShapeDecoration(
+            //color: Colors.grey.shade500, // Background color of the SnackBar
+            shape: CustomBorder() // Border width
+            ),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 16.0,
+          ),
+        ),
+      ),
+    );
     final snackBar = SnackBar(
       content: Text(message),
       backgroundColor: color,
     );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    ScaffoldMessenger.of(context).showSnackBar(animatedSnackBar);
     /* var result = await resultBool;
     if (result) {
       final snackBar = SnackBar(

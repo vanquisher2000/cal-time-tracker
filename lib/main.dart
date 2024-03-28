@@ -53,6 +53,7 @@ class MainApp extends StatelessWidget {
           darkTheme: ThemeData(
             colorScheme: darkColorScheme ?? _defaultDarkColorScheme,
             useMaterial3: true,
+            splashColor: Colors.transparent,
           ),
           home: UserController.user == null
               ? const LoginPage()

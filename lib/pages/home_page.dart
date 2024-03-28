@@ -4,6 +4,7 @@ import 'package:cal_time_tracker/controller/notificationController.dart';
 import 'package:cal_time_tracker/controller/userController.dart';
 import 'package:cal_time_tracker/pages/login_page.dart';
 import 'package:cal_time_tracker/pages/new_project_dialog.dart';
+import 'package:cal_time_tracker/pages/project_page.dart';
 import 'package:cal_time_tracker/pages/project_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -163,11 +164,38 @@ class _MyHomePage extends State<MyHomePage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: ExpTile(
+                          child: ListTile(
+                            key: Key(
+                                appState.getEvents(searchValue)[index].name),
+                            title: RichText(
+                              text: TextSpan(
+                                text:
+                                    appState.getEvents(searchValue)[index].name,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            subtitle: Text(appState.getFormattedDuration(
+                                appState
+                                    .getEvents(searchValue)[index]
+                                    .duration)),
+                            onTap: () {
+                              appState.currentParentEvent =
+                                  appState.getEvents(searchValue)[index];
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: ((context) => ProjectPage())));
+                            },
+                          )
+                          /* ExpTile(
                             key: Key(
                                 appState.getEvents(searchValue)[index].name),
                             event: appState.getEvents(searchValue)[index],
-                          ),
+                          ) */
+                          ,
                         );
                       })
               //Tasks(events: appState.getEvents(searchValue)),

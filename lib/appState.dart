@@ -2,28 +2,29 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:cal_time_tracker/data/Task.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cal_time_tracker/controller/calendarController.dart';
 import 'package:cal_time_tracker/controller/notificationController.dart';
-import 'package:cal_time_tracker/data/EventData.dart';
+import 'package:cal_time_tracker/data/event_data.dart';
 
-extension IntExtensions on int {
+/* extension IntExtensions on int {
   String toFormattedString() {
     return toString().padLeft(2, "0");
   }
 }
 
 extension DoubleExtensions on double {
-  String toFormatedString() {
+  String toFormattedString() {
     return toInt().toString().padLeft(2, "0");
   }
-}
+} */
 
 class MyAppState extends ChangeNotifier {
   MyAppState() {
-    initPrefs();
+    initPref();
     setColors();
   }
 
@@ -40,6 +41,15 @@ class MyAppState extends ChangeNotifier {
   DateTime startTime = DateTime(0);
   EventData? currentEvent;
   var canPop = true;
+  var currentTask = "";
+  var pausedTime = Duration.zero;
+  var taskStartTime = DateTime(0);
+
+  //List<String> subTasks = [];
+
+  Map<String, List<DateTime>> subTasks = {};
+
+  List<Task> tasks = [];
 
   var heroMode = false;
 
@@ -87,6 +97,45 @@ class MyAppState extends ChangeNotifier {
     // });
   }
 
+  void pauseTimer(bool isPaused) {
+    if (!isPaused) {
+      timer.cancel();
+      pausedTime = elapsedTime;
+    } else {
+      taskStartTime = DateTime.now();
+      timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        elapsedTime = DateTime.now().difference(taskStartTime) + pausedTime;
+        lapsedMinutes = elapsedTime.inSeconds / 60.0;
+        lapsedSeconds = elapsedTime.inSeconds % 60;
+        lapsedHours = elapsedTime.inMinutes ~/ 60;
+        notifyListeners();
+      });
+    }
+  }
+
+  void startTask() {
+    pausedTime = Duration.zero;
+    taskStartTime = DateTime.now();
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      elapsedTime = DateTime.now().difference(taskStartTime) + pausedTime;
+      lapsedMinutes = elapsedTime.inSeconds / 60.0;
+      lapsedSeconds = elapsedTime.inSeconds % 60;
+      lapsedHours = elapsedTime.inMinutes ~/ 60;
+      notifyListeners();
+    });
+  }
+
+  void stopTask(String task) {
+    saveTimeForTask(task);
+    timer.cancel();
+    pausedTime = Duration.zero;
+    elapsedTime = Duration.zero;
+  }
+
+  void saveTimeForTask(String task) {
+    subTasks[task]?.add(DateTime.now());
+  }
+
   void stopTimer(BuildContext context) {
     if (isInitialized) {
       timer.cancel();
@@ -118,7 +167,7 @@ class MyAppState extends ChangeNotifier {
     addEvent(currentEvent!);
     CalendarController.addEvent(
       "${currentParentEvent?.name} : $currentEventName",
-      currentEventInfo,
+      generateEventInfo(),
       startTime,
       stopTime,
       context: context,
@@ -126,12 +175,13 @@ class MyAppState extends ChangeNotifier {
     saveData();
     canPop = true;
     LocalNotificationService.flutterLocalNotificationsPlugin.cancelAll();
-    reset();
+    //reset();
     notifyListeners();
   }
 
   void reset() {
     //if (startTime != DateTime(0)) {
+    tasks = [];
     currentEvent = null;
     currentParentEvent = null;
     canPop = true;
@@ -151,6 +201,15 @@ class MyAppState extends ChangeNotifier {
     infoTextFieldController.clear();
     notifyListeners();
     //}
+  }
+
+  bool tasksFinished() {
+    for (var task in tasks) {
+      if (task.stopTime == DateTime(0) && task.startTime != DateTime(0)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void addEvent(EventData _event) {
@@ -200,6 +259,15 @@ class MyAppState extends ChangeNotifier {
     return "${hours.toFormattedString()}:${(minutes - hours * 60).toFormattedString()}:${remainingSeconds.toFormattedString()}";
   }
 
+  String generateEventInfo() {
+    var ret = "";
+    tasks.forEach((element) {
+      ret =
+          "${element.name} : ${element.getFormattedDuration()} , ${getTimeFormatted(element.startTime)} -> ${getTimeFormatted(element.stopTime)}\n";
+    });
+    return ret;
+  }
+
   /* void showNotification() {
     NotificationController.showNotification(
         title:
@@ -222,7 +290,7 @@ class MyAppState extends ChangeNotifier {
         ]);
   } */
 
-  Future<void> initPrefs() async {
+  Future<void> initPref() async {
     try {
       sharedPreferences = await SharedPreferences.getInstance();
     } catch (e) {
@@ -323,5 +391,10 @@ class MyAppState extends ChangeNotifier {
   String getEndTimeFormatted() {
     //if (stopTime == DateTime(0)) return "";
     return "${stopTime.hour.toFormattedString()}:${stopTime.minute.toFormattedString()}:${stopTime.second.toFormattedString()}";
+  }
+
+  String getTimeFormatted(DateTime time) {
+    //if (stopTime == DateTime(0)) return "";
+    return "${time.hour.toFormattedString()}:${time.minute.toFormattedString()}:${time.second.toFormattedString()}";
   }
 }

@@ -1,5 +1,5 @@
 import 'package:cal_time_tracker/appState.dart';
-import 'package:cal_time_tracker/data/EventData.dart';
+import 'package:cal_time_tracker/data/event_data.dart';
 import 'package:cal_time_tracker/pages/taskPage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
