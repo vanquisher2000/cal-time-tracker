@@ -1,5 +1,5 @@
 import 'package:cal_time_tracker/appState.dart';
-import 'package:cal_time_tracker/data/Task.dart';
+import 'package:cal_time_tracker/data/task.dart';
 import 'package:cal_time_tracker/data/event_data.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +10,40 @@ class NewCategoryDialog extends StatelessWidget {
   var eventName = "";
   final bool isParent;
   final bool isTask;
+
+  SnackBar snackBar(String eventName) {
+    return SnackBar(
+      backgroundColor:
+          Colors.transparent, // Set background color to transparent
+      elevation: 0, // Remove shadow
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0), // Set border radius
+      ),
+      content: AnimatedContainer(
+        duration: const Duration(milliseconds: 500),
+        padding: const EdgeInsets.symmetric(
+          vertical: 8.0,
+          horizontal: 12.0,
+        ),
+        decoration: ShapeDecoration(
+            color: Colors.grey.shade500, // Background color of the SnackBar
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0), // Set border radius
+            ) // Border width
+            ),
+        child: Text(
+          "$eventName already exists",
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 16.0,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,18 +84,41 @@ class NewCategoryDialog extends StatelessWidget {
                   TextButton(
                     onPressed: () {
                       if (eventName.isNotEmpty) {
+                        var exists = false;
                         var event = EventData(name: eventName, duration: 0);
                         if (isParent) {
-                          appState.events.add(event);
+                          if (appState
+                              .checkForDoubles(event.name, appState.events)
+                              .isEmpty) {
+                            appState.events.add(event);
+                          } else {
+                            exists = true;
+                          }
                         } else if (!isParent && !isTask) {
-                          appState.currentParentEvent?.children.add(event);
+                          if (appState
+                              .checkForDoubles(event.name,
+                                  appState.currentParentEvent?.children ?? [])
+                              .isEmpty) {
+                            appState.currentParentEvent?.children.add(event);
+                          } else {
+                            exists = true;
+                          }
                         } else {
                           //appState.subTasks.add(eventName);
                           //appState.subTasks[eventName] = [];
-                          appState.tasks.add(Task(name: eventName));
+                          if (appState.checkForDoubleTasks(eventName).isEmpty) {
+                            appState.tasks.add(Task(name: eventName));
+                          } else {
+                            exists = true;
+                          }
                         }
-                        appState.notifyListeners();
-                        Navigator.pop(context);
+                        if (exists) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(snackBar(eventName));
+                        } else {
+                          appState.notifyListeners();
+                          Navigator.pop(context);
+                        }
                       }
                     },
                     child: const Text(

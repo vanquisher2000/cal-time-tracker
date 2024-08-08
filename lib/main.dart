@@ -14,7 +14,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await LocalNotificationService.init();
-  SystemChrome.setEnabledSystemUIMode(
+  /* SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.manual,
     overlays: [SystemUiOverlay.top],
   );
@@ -25,7 +25,8 @@ void main() async {
         overlays: [SystemUiOverlay.top],
       );
     },
-  );
+  ); */
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
   runApp(const MainApp());
 }
 
@@ -46,13 +47,24 @@ class MainApp extends StatelessWidget {
         child: MaterialApp(
           title: 'Time Tracker',
           theme: ThemeData(
-            colorScheme: lightColorScheme ?? _defaultLightColorScheme,
+            colorScheme: darkColorScheme ?? _defaultLightColorScheme,
             useMaterial3: true,
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: Colors.black,
+            backgroundColor: Colors.black,
+            appBarTheme: AppBarTheme(
+              color: Colors.black,
+            ),
             splashColor: Colors.transparent,
           ),
           darkTheme: ThemeData(
             colorScheme: darkColorScheme ?? _defaultDarkColorScheme,
             useMaterial3: true,
+            scaffoldBackgroundColor: Colors.black,
+            backgroundColor: Colors.black,
+            appBarTheme: AppBarTheme(
+              color: Colors.black,
+            ),
             splashColor: Colors.transparent,
           ),
           home: UserController.user == null

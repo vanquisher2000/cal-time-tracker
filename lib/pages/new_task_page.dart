@@ -1,4 +1,5 @@
 import 'package:cal_time_tracker/appState.dart';
+import 'package:cal_time_tracker/data/task.dart';
 import 'package:cal_time_tracker/pages/new_project_dialog.dart';
 import 'package:cal_time_tracker/pages/task_page_dialogs.dart';
 import 'package:cal_time_tracker/pages/timer_card.dart';
@@ -18,34 +19,37 @@ class _NewTaskPage extends State<NewTaskPage> {
   final animationDuration = const Duration(milliseconds: 500);
   var icon = const Icon(Icons.play_arrow_outlined);
 
-  var snackBar = SnackBar(
-    backgroundColor: Colors.transparent, // Set background color to transparent
-    elevation: 0, // Remove shadow
-    behavior: SnackBarBehavior.floating,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20.0), // Set border radius
-    ),
-    content: AnimatedContainer(
-      duration: const Duration(milliseconds: 500),
-      padding: const EdgeInsets.symmetric(
-        vertical: 8.0,
-        horizontal: 12.0,
+  SnackBar snackBar({required String message}) {
+    return SnackBar(
+      backgroundColor:
+          Colors.transparent, // Set background color to transparent
+      elevation: 0, // Remove shadow
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0), // Set border radius
       ),
-      decoration: ShapeDecoration(
-          color: Colors.grey.shade500, // Background color of the SnackBar
-          shape: CustomBorder() // Border width
+      content: AnimatedContainer(
+        duration: const Duration(milliseconds: 500),
+        padding: const EdgeInsets.symmetric(
+          vertical: 8.0,
+          horizontal: 12.0,
+        ),
+        decoration: ShapeDecoration(
+            color: Colors.grey.shade500, // Background color of the SnackBar
+            shape: CustomBorder() // Border width
+            ),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 16.0,
           ),
-      child: const Text(
-        "finish tasks first",
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.bold,
-          fontSize: 16.0,
         ),
       ),
-    ),
-  );
+    );
+  }
 
   void startEvent(appState) {
     appState.startTimer();
@@ -54,18 +58,32 @@ class _NewTaskPage extends State<NewTaskPage> {
     });
   }
 
+  /* @override
+  void initState() {
+    super.initState();
+    //var appState = context.watch<MyAppState>();
+  } */
+
+  /* void pauseTasks(List<Task> tasks) {
+    setState(() {
+      for (var task in tasks) {
+        if (task.stopTime == DateTime(0) && task.startTime != DateTime(0)) {
+          task.fadeState = CrossFadeState.showSecond;
+        }
+      }
+    });
+  } */
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    var theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: RichText(
           text: TextSpan(
             text: appState.currentTask,
-            style: const TextStyle(
-                //color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 24),
+            style: theme.textTheme.displaySmall,
           ),
         ),
       ),
@@ -81,7 +99,7 @@ class _NewTaskPage extends State<NewTaskPage> {
           if (didPop) {
             debugPrint("trying to pop");
             Navigator.of(context).pop();
-            Navigator.popUntil(context, ModalRoute.withName("/"));
+            Navigator.popUntil(context, ModalRoute.withName("ProjectPage"));
             debugPrint("popped");
           } else {
             if (appState.isInitialized) {
@@ -90,13 +108,14 @@ class _NewTaskPage extends State<NewTaskPage> {
                   builder: (context) => const timerIsOnDialog());
             } else {
               Navigator.of(context).pop();
+              Navigator.of(context).pop();
               Navigator.popUntil(context, ModalRoute.withName("/"));
             }
           }
         }),
         child: Column(
           children: [
-            const TimerCard(),
+            //TimerCard(),
             IconButton(
               onPressed: () {
                 if (!appState.isInitialized) {
@@ -105,11 +124,21 @@ class _NewTaskPage extends State<NewTaskPage> {
                     appState.stopTime == DateTime(0)) {
                   if (appState.tasksFinished()) {
                     appState.stopTimer(context);
+                    //pauseTasks(appState.tasks);
                     setState(() {
                       icon = const Icon(Icons.backup_outlined);
+                      for (var task in appState.tasks) {
+                        if (!task.finished && task.startTime != DateTime(0)) {
+                          task.pause();
+                          setState(() {
+                            task.fadeState = CrossFadeState.showFirst;
+                          });
+                        }
+                      }
                     });
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(snackBar(message: "finish Tasks first"));
                   }
                 } else {
                   appState.pushEvent(context);
@@ -130,96 +159,101 @@ class _NewTaskPage extends State<NewTaskPage> {
                   //var key = appState.subTasks.keys.elementAt(index);
                   //var taskTime = appState.subTasks[key];
                   var task = appState.tasks[index];
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            RichText(
-                              text: TextSpan(
-                                text: task.name,
-                                style: TextStyle(
-                                  decoration: task.taskTextDecoration,
-                                  //color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              maxLines: 4,
-                              softWrap: true,
-                              overflow: TextOverflow.ellipsis,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          RichText(
+                            text: TextSpan(
+                              text: task.name,
+                              style: //theme.textTheme.headlineSmall
+                                  TextStyle(
+                                      decoration: task.getTextDecoration(),
+                                      color:
+                                          theme.brightness == Brightness.light
+                                              ? Colors.black
+                                              : Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14),
                             ),
-                            const Spacer(),
-                            RichText(
-                              text: TextSpan(
+                            maxLines: 4,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const Spacer(),
+                          RichText(
+                            text: TextSpan(
                                 text: task.getFormattedDuration(),
-                                style: const TextStyle(
-                                  //color: Colors.black,
-                                  fontWeight: FontWeight.normal,
-                                ),
-                              ),
-                              maxLines: 4,
-                              softWrap: true,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const Spacer(),
-                            AnimatedOpacity(
-                              opacity: task.opacity,
-                              duration: animationDuration,
-                              child: AnimatedCrossFade(
-                                firstChild: IconButton(
-                                  onPressed: () {
-                                    //appState.startTimer();
-                                    //appState.saveTimeForTask(key);
-                                    if (task.timer == null) {
-                                      if (!appState.isInitialized) {
-                                        startEvent(appState);
-                                      }
+                                style: theme.textTheme.bodyMedium),
+                            maxLines: 4,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const Spacer(),
+                          AnimatedOpacity(
+                            opacity: task.getOpacity(),
+                            duration: animationDuration,
+                            child: AnimatedCrossFade(
+                              firstChild: IconButton(
+                                onPressed: () {
+                                  if (appState.stopTime == DateTime(0)) {
+                                    if (!appState.isInitialized) {
+                                      startEvent(appState);
+                                    }
+                                    if (task.startTime == DateTime(0) &&
+                                        task.seconds == 0) {
                                       task.start();
                                     } else {
+                                      task.isPaused = true;
                                       task.resume();
                                     }
-                                    task.fadeState = CrossFadeState.showSecond;
-                                    appState.canPop = false;
-                                  },
-                                  icon: const Icon(Icons.play_arrow),
-                                ),
-                                secondChild: IconButton(
-                                  onPressed: () {
-                                    //appState.pauseTimer(isPaused);
-                                    //isPaused = !isPaused;
-                                    task.pause();
-                                    task.fadeState = CrossFadeState.showFirst;
-                                  },
-                                  icon: const Icon(Icons.pause),
-                                ),
-                                crossFadeState: task.fadeState,
-                                duration: animationDuration,
-                              ),
-                            ),
-                            AnimatedOpacity(
-                              opacity: task.opacity,
-                              duration: animationDuration,
-                              child: IconButton(
-                                onPressed: () {
-                                  if (task.timer != null) {
-                                    //appState.saveTimeForTask(key);
-                                    //appState.timer.cancel();
-                                    task.stop();
+
                                     setState(() {
-                                      task.taskTextDecoration =
-                                          TextDecoration.lineThrough;
-                                      task.opacity = 0.0;
+                                      task.fadeState =
+                                          CrossFadeState.showSecond;
                                     });
+                                    appState.canPop = false;
                                   }
                                 },
-                                icon: const Icon(Icons.stop),
+                                icon: const Icon(Icons.play_arrow),
                               ),
-                            )
-                          ],
-                        ),
+                              secondChild: IconButton(
+                                onPressed: () {
+                                  task.pause();
+                                  setState(() {
+                                    task.fadeState = CrossFadeState.showFirst;
+                                  });
+                                },
+                                icon: const Icon(Icons.pause),
+                              ),
+                              crossFadeState: task.fadeState,
+                              duration: animationDuration,
+                            ),
+                          ),
+                          AnimatedOpacity(
+                            opacity: task.getOpacity(),
+                            duration: animationDuration,
+                            child: IconButton(
+                              onPressed: () {
+                                if (task.timer != null) {
+                                  setState(() {
+                                    task.stop();
+                                  });
+                                } else {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(snackBar(
+                                    message: "task hasn't started yet",
+                                  ));
+                                }
+                              },
+                              icon: const Icon(Icons.stop),
+                            ),
+                          )
+                        ],
                       ),
                     ),
                   );

@@ -21,6 +21,9 @@ dependencies:
   iconly: ^1.0.1
   provider: ^6.1.2
   shared_preferences: ^2.2.2
+  wakelock: ^0.6.1
+  screen_brightness: ^1.0.1
+  #flutter_screen: ^0.1.0 # Make sure to use the latest version available
 
 dev_dependencies:
   flutter_test:

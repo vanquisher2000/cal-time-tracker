@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cal_time_tracker/data/task.dart';
 import 'package:flutter/material.dart';
 
 class DataClass {
@@ -25,6 +26,7 @@ class EventData {
   String _eventInfo;
   bool _isExpanded;
   List<EventData> _children;
+  List<Task> _tasks;
 
   //final DateTime startTime;
   int _duration;
@@ -42,8 +44,13 @@ class EventData {
   set isExpanded(bool value) => _isExpanded = value;
 
   List<EventData> get children => _children;
-
   void addChild(EventData child) => _children.add(child);
+
+  List<Task> get tasks => _tasks;
+  void addTask(Task task) => _tasks.add(task);
+  set tasks(List<Task> tasks) => _tasks = tasks;
+
+  var lastUsed = DateTime(0);
 
   /* set eventInfo(String eventInfo) {
     this.eventInfo = eventInfo;
@@ -65,19 +72,24 @@ class EventData {
     this.duration = duration;
   } */
 
-  EventData({
-    required String name,
-    //required this.startTime,
-    //required this.endTime,
-    required int duration,
-    String eventInfo = "",
-    bool isExpanded = false,
-    List<EventData>? children,
-  })  : _name = name,
+  EventData(
+      {required String name,
+      //required this.startTime,
+      //required this.endTime,
+      required int duration,
+      String eventInfo = "",
+      bool isExpanded = false,
+      List<EventData>? children,
+      List<Task>? tasks,
+      String? strLastUsed})
+      : _name = name,
         _duration = duration,
         _eventInfo = eventInfo,
         _isExpanded = isExpanded,
-        _children = children ?? [];
+        lastUsed =
+            strLastUsed == null ? DateTime(0) : DateTime.parse(strLastUsed),
+        _children = children ?? [],
+        _tasks = tasks ?? [];
 
   factory EventData.fromJson(Map<String, dynamic> json) {
     return EventData(
@@ -87,20 +99,24 @@ class EventData {
         duration: json["duration"],
         eventInfo: json["eventInfo"],
         isExpanded: json["isExpanded"],
+        strLastUsed: json["lastUsed"],
         children: (json["children"] as List<dynamic>)
             .map((e) => EventData.fromJson(jsonDecode(e)))
+            .toList(),
+        tasks: (json["tasks"] as List<dynamic>)
+            .map((e) => Task.fromJson(jsonDecode(e)))
             .toList());
   }
 
   Map<String, dynamic> toJson() {
     return {
       "name": name,
-      //"startTime": startTime.toString(),
-      //"endTime": endTime.toIso8601String(),
       "duration": duration,
       "eventInfo": eventInfo,
       "isExpanded": isExpanded,
+      "lastUsed": lastUsed.toString(),
       "children": _children.map((e) => jsonEncode(e.toJson())).toList(),
+      "tasks": _tasks.map((e) => jsonEncode(e.toJson())).toList(),
     };
   }
 

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:cal_time_tracker/data/Task.dart';
+import 'package:cal_time_tracker/data/task.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -66,6 +66,7 @@ class MyAppState extends ChangeNotifier {
   var minutesColor = Colors.transparent;
   var hourColor = Colors.transparent;
 
+//!not used anymore
   void startTimer() {
     // setState(() {
     if (!isInitialized) {
@@ -97,7 +98,8 @@ class MyAppState extends ChangeNotifier {
     // });
   }
 
-  void pauseTimer(bool isPaused) {
+  //!not used anymore
+  /* void pauseTimer(bool isPaused) {
     if (!isPaused) {
       timer.cancel();
       pausedTime = elapsedTime;
@@ -111,9 +113,9 @@ class MyAppState extends ChangeNotifier {
         notifyListeners();
       });
     }
-  }
-
-  void startTask() {
+  } */
+//!not used anymore
+  /* void startTask() {
     pausedTime = Duration.zero;
     taskStartTime = DateTime.now();
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -123,18 +125,18 @@ class MyAppState extends ChangeNotifier {
       lapsedHours = elapsedTime.inMinutes ~/ 60;
       notifyListeners();
     });
-  }
-
-  void stopTask(String task) {
+  } */
+//!not used anymore
+  /* void stopTask(String task) {
     saveTimeForTask(task);
     timer.cancel();
     pausedTime = Duration.zero;
     elapsedTime = Duration.zero;
-  }
-
-  void saveTimeForTask(String task) {
+  } */
+//!not used anymore
+  /* void saveTimeForTask(String task) {
     subTasks[task]?.add(DateTime.now());
-  }
+  } */
 
   void stopTimer(BuildContext context) {
     if (isInitialized) {
@@ -147,7 +149,8 @@ class MyAppState extends ChangeNotifier {
           //startTime: startTime,
           //endTime: stopTime,
           duration: stopTime.difference(startTime).inSeconds,
-          eventInfo: currentEventInfo);
+          eventInfo: generateEventInfo(),
+          tasks: tasks);
       //events.add(result);
       /* addEvent(currentEvent!);
       CalendarController.addEvent(
@@ -203,25 +206,32 @@ class MyAppState extends ChangeNotifier {
     //}
   }
 
+  String taskTimeString(int index) {
+    var time = tasks[index].getFormattedDuration();
+    //if (isInitialized) notifyListeners();
+    return time;
+  }
+
   bool tasksFinished() {
     for (var task in tasks) {
       if (task.stopTime == DateTime(0) && task.startTime != DateTime(0)) {
-        return false;
+        //return false;
+        task.pause();
       }
     }
+    notifyListeners();
     return true;
+  }
+
+  CrossFadeState getFadeState(int index) {
+    notifyListeners();
+    return tasks[index].fadeState;
   }
 
   void addEvent(EventData _event) {
     debugPrint("adding event : ${_event.name}");
     EventData? event = currentParentEvent?.children.firstWhere(
       (element) => element.name == _event.name,
-      orElse: () => EventData(
-        name: "",
-        //startTime: DateTime(0),
-        //endTime: DateTime(0),
-        duration: 0,
-      ),
     );
     /* for (var e in events) {
       if (e.name == _event.name) {
@@ -230,11 +240,12 @@ class MyAppState extends ChangeNotifier {
       }
     } */
 
-    if (event?.duration != 0) {
+    if (event != null) {
       //event.startTime = _event.startTime;
       //event.endTime = _event.endTime;
-      event?.eventInfo = _event.eventInfo;
-      event?.duration = event.duration + _event.duration;
+      event.eventInfo = _event.eventInfo;
+      event.duration = event.duration + _event.duration;
+      event.tasks = _event.tasks;
       debugPrint(
           "updating event : ${_event.name} , new duration : ${event?.duration}");
       //saveData();
@@ -261,34 +272,20 @@ class MyAppState extends ChangeNotifier {
 
   String generateEventInfo() {
     var ret = "";
-    tasks.forEach((element) {
-      ret =
-          "${element.name} : ${element.getFormattedDuration()} , ${getTimeFormatted(element.startTime)} -> ${getTimeFormatted(element.stopTime)}\n";
+    tasks?.forEach((element) {
+      if (element.startTime.isAfter(startTime) ||
+          element.startTime.isAtSameMomentAs(startTime)) {
+        ret +=
+            "${element.name} : ${element.getFormattedDuration()} , ${getTimeFormatted(element.startTime)} -> ${getTimeFormatted(element.stopTime)}\n";
+      }
     });
     return ret;
   }
 
-  /* void showNotification() {
-    NotificationController.showNotification(
-        title:
-            "$currentEventName : ${getFormatedDuration(elapsedTime.inSeconds)}",
-        body: "running Timer: ${getFormatedDuration(elapsedTime.inSeconds)}",
-        payload: {
-          "notificationId": "1",
-        },
-        actionButtons: [
-          NotificationActionButton(
-            key: "DISMISS",
-            label: "Dismiss",
-            actionType: ActionType.SilentAction,
-            color: Colors.red,
-          ),
-          NotificationActionButton(
-              key: "SNOOZE",
-              label: "Snooze",
-              actionType: ActionType.SilentAction),
-        ]);
-  } */
+  void getTasks(List<Task>? list) {
+    tasks = [];
+    list?.forEach((element) => tasks?.add(element));
+  }
 
   Future<void> initPref() async {
     try {
@@ -337,6 +334,26 @@ class MyAppState extends ChangeNotifier {
         }
       }).toList();
     }
+  }
+
+  List<EventData> checkForDoubles(String name, List<EventData> list) {
+    return list.where((element) {
+      if (element.name == name) {
+        return true;
+      } else {
+        return false;
+      }
+    }).toList();
+  }
+
+  List<Task> checkForDoubleTasks(String name) {
+    return tasks.where((element) {
+      if (element.name == name) {
+        return true;
+      } else {
+        return false;
+      }
+    }).toList();
   }
 
   void sortList() {
