@@ -6,8 +6,11 @@ import 'package:cal_time_tracker/pages/login_page.dart';
 import 'package:cal_time_tracker/pages/new_project_dialog.dart';
 import 'package:cal_time_tracker/pages/project_page.dart';
 import 'package:cal_time_tracker/pages/project_tile.dart';
+import 'package:cal_time_tracker/pages/stackTaskUI.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -16,7 +19,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePage();
 }
 
-class _MyHomePage extends State<MyHomePage> {
+class _MyHomePage extends State<MyHomePage> with WidgetsBindingObserver {
   _MyHomePage() {
     CalendarController.init();
   }
@@ -24,6 +27,9 @@ class _MyHomePage extends State<MyHomePage> {
   String? username;
   String? userImageUrl;
   String searchValue = "";
+  late MyAppState appState;
+  bool appStateInitialized = false;
+  bool restored = false;
 
   Future<void> fetchUserInfo() async {
     var user = UserController.user ?? await UserController.loginWithGoogle();
@@ -44,25 +50,100 @@ class _MyHomePage extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-
+    WidgetsBinding.instance.addObserver(this);
     permissionCheck();
     fetchUserInfo();
   }
 
   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    print("current state app is ${state}");
+    switch (state) {
+      case AppLifecycleState.inactive:
+        print('App is inactive');
+        break;
+      case AppLifecycleState.paused:
+        if (appStateInitialized) {
+          appState.saveData();
+          appState.saveTempData();
+        } else {
+          debugPrint("appState not initialized yet");
+        }
+        print('App is paused');
+        break;
+      case AppLifecycleState.resumed:
+        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+          Future.delayed(Duration(milliseconds: 200), () {
+            restore();
+          });
+        });
+        //if (appStateInitialized) {}
+        print('App is resumed');
+        break;
+      case AppLifecycleState.detached:
+        if (appStateInitialized) {
+          appState.saveData();
+          appState.saveTempData();
+        } else {
+          debugPrint("appState not initialized yet");
+        }
+        print('App is detached');
+        break;
+      case AppLifecycleState.hidden:
+        print('App is hidden');
+        break;
+    }
+  }
+
+  void restore() {
+    restored = true;
+    appState.loadTempData();
+    /* final ModalRoute? modalRoute = ModalRoute.of(context);
+    if (modalRoute != null) {
+      print('Current route: ${modalRoute.settings.name}');
+    } else {
+      print('No current route found.');
+    } */
+
+    if (appState.currentParentEvent != null) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: ((context) => const MyHomePage())),
+        (Route<dynamic> route) => false,
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: ((context) => const ProjectPage())),
+      );
+    }
+    if (appState.currentEventName.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => TaskStack()),
+      );
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar(
+      message: "the app was restored",
+    ));
+  }
+
+  @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
+    appState = context.watch<MyAppState>();
+    appStateInitialized = true;
+    //if (!restored) restore();
     var theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
@@ -212,4 +293,37 @@ class _MyHomePage extends State<MyHomePage> {
       ), //
     );
   }
+}
+
+SnackBar snackBar({required String message}) {
+  return SnackBar(
+    backgroundColor: Colors.transparent, // Set background color to transparent
+    elevation: 0, // Remove shadow
+    behavior: SnackBarBehavior.floating,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(30.0), // Set border radius
+    ),
+    content: AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      padding: const EdgeInsets.symmetric(
+        vertical: 8.0,
+        horizontal: 12.0,
+      ),
+      decoration: const ShapeDecoration(
+          color: Colors.white, // Background color of the SnackBar
+          shape: RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.all(Radius.circular(30))) // Border width
+          ),
+      child: Text(
+        message,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.bold,
+          fontSize: 16.0,
+        ),
+      ),
+    ),
+  );
 }

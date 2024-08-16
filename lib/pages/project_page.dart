@@ -100,54 +100,59 @@ class _ProjectPage extends State<ProjectPage> {
               ),
         ),
       ), */
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 30, right: 30, left: 30),
-                child: Text(
-                  appState.currentParentEvent?.name ?? "",
-                  style: TextStyle(
-                    fontSize: 60,
-                    color: primaryTextColor,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Divider(),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 12.0),
-                  child: GestureDetector(
-                    child: const Icon(
-                      Icons.add,
-                      size: 42,
+      body: PopScope(
+        onPopInvoked: (didPop) {
+          appState.currentParentEvent = null;
+        },
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 30, right: 30, left: 30),
+                  child: Text(
+                    appState.currentParentEvent?.name ?? "",
+                    style: TextStyle(
+                      fontSize: 60,
+                      color: primaryTextColor,
+                      fontWeight: FontWeight.w900,
                     ),
-                    onTap: () {
-                      showDialog(
-                          context: context,
-                          builder: (context) => NewCategoryDialog(
-                                isParent: false,
-                              ));
-                    },
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: children,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Divider(),
                 ),
-              )
-            ],
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 12.0),
+                    child: GestureDetector(
+                      child: const Icon(
+                        Icons.add,
+                        size: 42,
+                      ),
+                      onTap: () {
+                        showDialog(
+                            context: context,
+                            builder: (context) => NewCategoryDialog(
+                                  isParent: false,
+                                ));
+                      },
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: children,
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),

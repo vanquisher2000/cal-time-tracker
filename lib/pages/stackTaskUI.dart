@@ -1,4 +1,4 @@
-import 'dart:ffi';
+//import 'dart:ffi';
 
 import 'package:cal_time_tracker/appState.dart';
 import 'package:cal_time_tracker/data/task.dart';
@@ -85,6 +85,9 @@ class _TaskStack extends State<TaskStack> {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var width = MediaQuery.of(context).size.width;
+    if (appState.onGoingTaskIndex != -1) {
+      showPushButton();
+    }
     //var tasks = sortList(appState.tasks);
     var tasks = appState.tasks;
     //if (keys.isEmpty) generateKeys(tasks.length);
@@ -101,15 +104,21 @@ class _TaskStack extends State<TaskStack> {
       body: PopScope(
         canPop: appState.canPop,
         onPopInvoked: (didPop) {
-          if (didPop) {
+          //print("here popp");
+
+          /* if (didPop) {
             appState.heroMode = true;
             return;
-          }
+          } */
           if (didPop) {
-            debugPrint("trying to pop");
-            Navigator.of(context).pop();
-            Navigator.popUntil(context, ModalRoute.withName("ProjectPage"));
+            debugPrint("trying to popp");
+            //Navigator.of(context).pop();
+            //Navigator.popUntil(context, ModalRoute.withName("ProjectPage"));
             debugPrint("popped");
+            appState.currentEventName = "";
+            appState.onGoingTaskIndex = -1;
+            appState.heroMode = true;
+            return;
           } else {
             if (appState.isInitialized) {
               showDialog(
@@ -119,6 +128,10 @@ class _TaskStack extends State<TaskStack> {
               Navigator.of(context).pop();
               Navigator.of(context).pop();
               Navigator.popUntil(context, ModalRoute.withName("/"));
+              appState.currentEventName = "";
+              appState.onGoingTaskIndex = -1;
+              debugPrint("popp values returned");
+              debugPrint("here popp");
             }
           }
         },
@@ -212,7 +225,7 @@ class _TaskStack extends State<TaskStack> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            GestureDetector(
+                            /*  GestureDetector(
                               child: const Icon(
                                 Icons.dark_mode,
                                 size: 42,
@@ -223,7 +236,7 @@ class _TaskStack extends State<TaskStack> {
                                 });
                                 //ScreenBrightness.instance.setScreenBrightness(0.05);
                               },
-                            ),
+                            ), */
                             GestureDetector(
                               child: const Icon(
                                 Icons.add,

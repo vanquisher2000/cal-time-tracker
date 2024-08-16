@@ -50,6 +50,9 @@ SnackBar snackBar({required String message}) {
 
 class _TaskWidget extends State<TaskWidget> {
   bool _isExpandText = false;
+  late MyAppState appState;
+  bool appStateInitialized = false;
+  var overrideHidden = false;
   void toggleExpandedText() {
     setState(() {
       _isExpandText =
@@ -61,14 +64,19 @@ class _TaskWidget extends State<TaskWidget> {
   var iconSize = 24;
 
   TextEditingController controller = TextEditingController();
+  bool _isHidden = true;
+
   @override
   void initState() {
     controller.text = widget.task.note;
     super.initState();
+    if (appStateInitialized) {
+      _isHidden = appState.onGoingTaskIndex == widget.index;
+    }
   }
 
-  bool _isHidden = true;
   void toggleExpanded() {
+    overrideHidden = true;
     setState(() {
       _isHidden =
           !_isHidden; // first click expand second click back to same position
@@ -83,7 +91,13 @@ class _TaskWidget extends State<TaskWidget> {
     if (task.finished) {
       checkIcon = Icons.check_box;
     }
-    var appState = context.watch<MyAppState>();
+    appState = context.watch<MyAppState>();
+    appStateInitialized = true;
+    if (!overrideHidden) {
+      setState(() {
+        _isHidden = !(appState.onGoingTaskIndex == widget.index);
+      });
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -111,29 +125,6 @@ class _TaskWidget extends State<TaskWidget> {
                 },
               ),
             ),
-            /* IconButton(
-              padding: EdgeInsets.zero,
-              iconSize: 24.0,
-              constraints: BoxConstraints(),
-              onPressed: () {
-                if (!task.finished) {
-                  if (task.timer != null) {
-                    setState(() {
-                      task.stop();
-                    });
-                    setState(() {
-                      checkIcon = Icons.check_box;
-                    });
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar(
-                      message: "task hasn't started yet",
-                    ));
-                  }
-                }
-              },
-              icon: Icon(checkIcon),
-            ),
-  */
             SizedBox(
               width: 200,
               child: GestureDetector(
@@ -155,6 +146,7 @@ class _TaskWidget extends State<TaskWidget> {
                 firstChild: IconButton(
                   onPressed: () {
                     widget.showButton();
+                    appState.onGoingTaskIndex = widget.index;
                     Wakelock.enable();
                     if (appState.stopTime == DateTime(0)) {
                       if (!appState.isInitialized) {
@@ -173,6 +165,7 @@ class _TaskWidget extends State<TaskWidget> {
                       });
                       appState.canPop = false;
                     }
+                    overrideHidden = true;
                     setState(() {
                       _isHidden = false;
                     });
@@ -206,7 +199,7 @@ class _TaskWidget extends State<TaskWidget> {
                 children: [
                   const SizedBox(height: 20),
                   Text(
-                    "Start : ${task.taskBeginTime}",
+                    "Start   : ${appState.getDateFormatted(task.taskBeginTime)} , ${appState.getTimeFormatted(task.taskBeginTime)}",
                     style: TextStyle(
                       fontSize: 18,
                       color: secondaryTextColor,
@@ -214,7 +207,7 @@ class _TaskWidget extends State<TaskWidget> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    "Finish : ${task.stopTime}",
+                    "Finish : ${appState.getDateFormatted(task.stopTime)} , ${appState.getTimeFormatted(task.stopTime)}",
                     style: TextStyle(
                       fontSize: 18,
                       color: secondaryTextColor,
@@ -231,19 +224,7 @@ class _TaskWidget extends State<TaskWidget> {
                   const SizedBox(height: 20),
                   AnimatedSize(
                     duration: animationDuration,
-                    child: /* Text(
-                      "widget.planetInfo.descriptionllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllldsfsdfsdfasdfsadfsagsdfasdagasdfasgasdf",
-                      maxLines: _isExpandText ? null : 1,
-                      overflow: _isExpandText
-                          ? TextOverflow.visible
-                          : TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: contentTextColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ), */
-                        TextField(
+                    child: TextField(
                       controller: controller,
                       //expands: _isExpandText,
                       maxLines: _isExpandText ? null : 1,

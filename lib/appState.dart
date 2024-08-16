@@ -22,12 +22,26 @@ extension DoubleExtensions on double {
   }
 } */
 
-class MyAppState extends ChangeNotifier {
+class MyAppState extends ChangeNotifier with WidgetsBindingObserver {
   MyAppState() {
     initPref();
     setColors();
   }
+  AppLifecycleState? _lastLifecycleState;
 
+  AppLifecycleState? get lastLifecycleState => _lastLifecycleState;
+
+  LifecycleNotifier() {
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  var onGoingTaskIndex = -1;
   var currentEventInfo = "";
   var currentEventName = "";
   Duration elapsedTime = Duration.zero;
@@ -45,9 +59,7 @@ class MyAppState extends ChangeNotifier {
   var pausedTime = Duration.zero;
   var taskStartTime = DateTime(0);
 
-  //List<String> subTasks = [];
-
-  Map<String, List<DateTime>> subTasks = {};
+  //Map<String, List<DateTime>> subTasks = {};
 
   List<Task> tasks = [];
 
@@ -66,12 +78,8 @@ class MyAppState extends ChangeNotifier {
   var minutesColor = Colors.transparent;
   var hourColor = Colors.transparent;
 
-//!not used anymore
   void startTimer() {
-    // setState(() {
     if (!isInitialized) {
-      //LocalNotificationService.showNotificationAndroid("timer", lapsedSeconds.toFormatedString());
-
       isInitialized = true;
       setColors();
       canPop = false;
@@ -85,82 +93,22 @@ class MyAppState extends ChangeNotifier {
         lapsedMinutes = elapsedTime.inSeconds / 60.0;
         lapsedSeconds = elapsedTime.inSeconds % 60;
         lapsedHours = elapsedTime.inMinutes ~/ 60;
-        /* LocalNotificationService.showNotificationAndroid(
-          "$currentEventName : ${getFormatedDuration(elapsedTime.inSeconds)}",
-          "elapsed Time: ${getFormatedDuration(elapsedTime.inSeconds)}",
-        ); */
-
-        // showNotification();
         notifyListeners();
       });
     }
     notifyListeners();
-    // });
   }
-
-  //!not used anymore
-  /* void pauseTimer(bool isPaused) {
-    if (!isPaused) {
-      timer.cancel();
-      pausedTime = elapsedTime;
-    } else {
-      taskStartTime = DateTime.now();
-      timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        elapsedTime = DateTime.now().difference(taskStartTime) + pausedTime;
-        lapsedMinutes = elapsedTime.inSeconds / 60.0;
-        lapsedSeconds = elapsedTime.inSeconds % 60;
-        lapsedHours = elapsedTime.inMinutes ~/ 60;
-        notifyListeners();
-      });
-    }
-  } */
-//!not used anymore
-  /* void startTask() {
-    pausedTime = Duration.zero;
-    taskStartTime = DateTime.now();
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      elapsedTime = DateTime.now().difference(taskStartTime) + pausedTime;
-      lapsedMinutes = elapsedTime.inSeconds / 60.0;
-      lapsedSeconds = elapsedTime.inSeconds % 60;
-      lapsedHours = elapsedTime.inMinutes ~/ 60;
-      notifyListeners();
-    });
-  } */
-//!not used anymore
-  /* void stopTask(String task) {
-    saveTimeForTask(task);
-    timer.cancel();
-    pausedTime = Duration.zero;
-    elapsedTime = Duration.zero;
-  } */
-//!not used anymore
-  /* void saveTimeForTask(String task) {
-    subTasks[task]?.add(DateTime.now());
-  } */
 
   void stopTimer(BuildContext context) {
     if (isInitialized) {
       timer.cancel();
       stopTime = DateTime.now();
-
-      //isInitialized = false;
       currentEvent = EventData(
           name: currentEventName,
-          //startTime: startTime,
-          //endTime: stopTime,
-          duration: stopTime.difference(startTime).inSeconds,
+          //duration: stopTime.difference(startTime).inSeconds,
+          duration: getEventDuration(),
           eventInfo: generateEventInfo(),
           tasks: tasks);
-      //events.add(result);
-      /* addEvent(currentEvent!);
-      CalendarController.addEvent(
-        currentEventName,
-        currentEventInfo,
-        startTime,
-        stopTime,
-        context: context,
-      );
-      saveData(); */
       notifyListeners();
     }
   }
@@ -185,6 +133,7 @@ class MyAppState extends ChangeNotifier {
   void reset() {
     //if (startTime != DateTime(0)) {
     tasks = [];
+    onGoingTaskIndex = -1;
     currentEvent = null;
     currentParentEvent = null;
     canPop = true;
@@ -244,7 +193,8 @@ class MyAppState extends ChangeNotifier {
       //event.startTime = _event.startTime;
       //event.endTime = _event.endTime;
       event.eventInfo = _event.eventInfo;
-      event.duration = event.duration + _event.duration;
+      //event.duration = event.duration + _event.duration;
+      event.duration = _event.duration;
       event.tasks = _event.tasks;
       debugPrint(
           "updating event : ${_event.name} , new duration : ${event?.duration}");
@@ -262,6 +212,7 @@ class MyAppState extends ChangeNotifier {
     debugPrint("new total duration ${currentParentEvent?.duration}");
   }
 
+  static void continueLastTask() {}
   String getFormattedDuration(int seconds) {
     var minutes = seconds ~/ 60;
     var remainingSeconds = seconds % 60;
@@ -280,6 +231,13 @@ class MyAppState extends ChangeNotifier {
       }
     });
     return ret;
+  }
+
+  int getEventDuration() {
+    var sum =
+        tasks.map((t) => t.seconds).reduce((value, element) => element + value);
+    debugPrint("current sum is ${sum}");
+    return sum;
   }
 
   void getTasks(List<Task>? list) {
@@ -315,6 +273,39 @@ class MyAppState extends ChangeNotifier {
     List<String> eventDataString =
         events.map((e) => jsonEncode(e.toJson())).toList();
     sharedPreferences.setStringList("eventList", eventDataString);
+    debugPrint("data saved");
+  }
+
+  void loadTempData() {
+    List<String>? tempData = sharedPreferences.getStringList("tempData");
+    if (tempData != null) {
+      if (tempData[0].isNotEmpty) {
+        EventData? tempParentEvent = events.firstWhere(
+          (element) => element.name == tempData[0],
+        );
+        currentParentEvent = tempParentEvent;
+      }
+      if (tempData[1].isNotEmpty) {
+        currentEvent = currentParentEvent!.children
+            .firstWhere((element) => element.name == tempData[1]);
+      }
+      if (tempData[2] != "-1") {
+        onGoingTaskIndex = int.parse(tempData[2]);
+        startTime = DateTime.parse(tempData[3]);
+      }
+    }
+    debugPrint("temp data loaded ${tempData} , ${currentEvent?.name}  ");
+  }
+
+  void saveTempData() {
+    List<String> tempData = [
+      currentParentEvent?.name ?? "",
+      currentEventName,
+      onGoingTaskIndex.toString(),
+      startTime.toString()
+    ];
+    sharedPreferences.setStringList("tempData", tempData);
+    debugPrint("temp data saved");
   }
 
   List<EventData> getEvents(String searchValue) {
@@ -413,5 +404,10 @@ class MyAppState extends ChangeNotifier {
   String getTimeFormatted(DateTime time) {
     //if (stopTime == DateTime(0)) return "";
     return "${time.hour.toFormattedString()}:${time.minute.toFormattedString()}:${time.second.toFormattedString()}";
+  }
+
+  String getDateFormatted(DateTime time) {
+    //if (stopTime == DateTime(0)) return "";
+    return "${time.year}/${time.month.toFormattedString()}/${time.day.toFormattedString()}";
   }
 }
